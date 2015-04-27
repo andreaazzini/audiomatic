@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
@@ -31,11 +32,15 @@ public class EventActivity extends ActionBarActivity {
         EstimoteSDK.enableDebugLogging(true);
 
         beaconManager = new BeaconManager(this);
+        final TextView distanceText = (TextView) findViewById(R.id.distance_text);
 
         beaconManager.setRangingListener(new BeaconManager.RangingListener() {
             @Override
             public void onBeaconsDiscovered(Region region, List<Beacon> beacons) {
-                Log.d("Beacon Region Info", "Ranged beacons: " + beacons);
+                if (!beacons.isEmpty()) {
+                    Beacon nearestBeacon = getNearestBeacon(beacons);
+                    distanceText.setText(Integer.toString(nearestBeacon.getRssi()));
+                }
             }
         });
     }
@@ -91,5 +96,18 @@ public class EventActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private Beacon getNearestBeacon(List<Beacon> beacons) {
+        // The nearest beacon is initialized as the first one in the list
+        Beacon nearestBeacon = beacons.get(0);
+        // Find the real nearest beacon
+        for (Beacon beacon : beacons) {
+            if (beacon.getRssi() > nearestBeacon.getRssi()) {
+                nearestBeacon = beacon;
+            }
+        }
+
+        return nearestBeacon;
     }
 }
