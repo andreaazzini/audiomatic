@@ -1,78 +1,17 @@
 package se.kth.id2012_project;
 
-import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
-
-import com.estimote.sdk.Beacon;
-import com.estimote.sdk.BeaconManager;
-import com.estimote.sdk.EstimoteSDK;
-import com.estimote.sdk.Region;
-
-import java.util.List;
-
+import android.view.View;
+import android.widget.EditText;
 
 public class EventActivity extends ActionBarActivity {
-    private static final String ESTIMOTE_PROXIMITY_UUID = "B9407F30-F5F8-466E-AFF9-25556B57FE6D";
-    private static final Region ALL_ESTIMOTE_BEACONS = new Region("regionId", ESTIMOTE_PROXIMITY_UUID, null, null);
-
-    private BeaconManager beaconManager;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event);
-        //  App ID & App Token can be taken from App section of Estimote Cloud.
-        EstimoteSDK.initialize(getApplicationContext(), "id2012-project", "30ff36944829f37eda7fe252493048d2");
-        // Optional, debug logging.
-        EstimoteSDK.enableDebugLogging(true);
-
-        beaconManager = new BeaconManager(this);
-        final TextView distanceText = (TextView) findViewById(R.id.distance_text);
-
-        beaconManager.setRangingListener(new BeaconManager.RangingListener() {
-            @Override
-            public void onBeaconsDiscovered(Region region, List<Beacon> beacons) {
-                if (!beacons.isEmpty()) {
-                    Beacon nearestBeacon = getNearestBeacon(beacons);
-                    distanceText.setText(Integer.toString(nearestBeacon.getRssi()));
-                }
-            }
-        });
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
-            @Override public void onServiceReady() {
-                try {
-                    beaconManager.startRanging(ALL_ESTIMOTE_BEACONS);
-                } catch (RemoteException e) {
-                    Log.e("Manager Start Error", "Cannot start ranging", e);
-                }
-            }
-        });
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        try {
-            beaconManager.stopRanging(ALL_ESTIMOTE_BEACONS);
-        } catch (RemoteException e) {
-            Log.e("Manager Stop Error", "Cannot stop but it does not matter now", e);
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        beaconManager.disconnect();
-        super.onDestroy();
     }
 
 
@@ -98,16 +37,17 @@ public class EventActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private Beacon getNearestBeacon(List<Beacon> beacons) {
-        // The nearest beacon is initialized as the first one in the list
-        Beacon nearestBeacon = beacons.get(0);
-        // Find the real nearest beacon
-        for (Beacon beacon : beacons) {
-            if (beacon.getRssi() > nearestBeacon.getRssi()) {
-                nearestBeacon = beacon;
-            }
-        }
+    public void confirmCode(View v) {
+        EditText codeText = (EditText) findViewById(R.id.eventNumber);
+        String code = codeText.getText().toString();
+        // TODO check the existence of the code
+        // if so, get the beacon information
+        // and go to the BeaconActivity through an Intent
+        // otherwise, set error
+    }
 
-        return nearestBeacon;
+    private int getBeaconNameFromServer(String path) {
+        // TODO retrieve the beacon id in the server's hashmap
+        return -1;
     }
 }
