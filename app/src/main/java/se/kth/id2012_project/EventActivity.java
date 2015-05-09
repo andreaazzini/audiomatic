@@ -45,6 +45,8 @@ public class EventActivity extends ActionBarActivity {
         // if so, get the beacon information
         // and go to the BeaconActivity through an Intent
         Intent confirmIntent = new Intent(this, BeaconActivity.class);
+        // TODO retrieve the real event name
+        confirmIntent.putExtra("event_name", "Happiness Museum");
         startActivity(confirmIntent);
         finish();
         // otherwise, set error

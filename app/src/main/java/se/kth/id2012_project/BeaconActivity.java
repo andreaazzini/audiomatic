@@ -1,5 +1,6 @@
 package se.kth.id2012_project;
 
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
@@ -26,18 +27,23 @@ public class BeaconActivity extends ActionBarActivity {
     private BeaconManager beaconManager;
     private MediaPlayer mMediaPlayer;
     private String mStreamingResourceUrl;
+    private Event mEvent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beacon);
-        //  App ID & App Token can be taken from App section of Estimote Cloud.
+        // App ID & App Token can be taken from App section of Estimote Cloud.
         EstimoteSDK.initialize(getApplicationContext(), "id2012-project", "30ff36944829f37eda7fe252493048d2");
         // Optional, debug logging.
         EstimoteSDK.enableDebugLogging(true);
-
         beaconManager = new BeaconManager(this);
         mMediaPlayer = new MediaPlayer();
+        // Get the event name from EventActivity
+        Intent fromEventActivity = getIntent();
+        String eventName = fromEventActivity.getStringExtra("event_name");
+        setTitle(eventName);
+        mEvent = new Event(eventName);
 
         beaconManager.setRangingListener(new BeaconManager.RangingListener() {
             @Override
@@ -47,12 +53,18 @@ public class BeaconActivity extends ActionBarActivity {
                     Beacon nearestBeacon = getNearestBeacon(beacons);
                     // TODO retrieve the correct resource
                     Button beaconButton = (Button) findViewById(R.id.beaconButton);
-                    beaconButton.setClickable(true);
+                    beaconButton.setVisibility(View.VISIBLE);
                     String resourceUrl = "http://a1083.phobos.apple.com/us/r1000/014/Music/v4/4e/44/b7/4e44b7dc-aaa2-c63b-fb38-88e1635b5b29/mzaf_1844128138535731917.plus.aac.p.m4a";
+                    // Save the resource for later fast retrieval
+                    Resource resource = new Resource(resourceUrl, null);
+                    if (!mEvent.hasResourceOfBeacon(nearestBeacon.getProximityUUID())) {
+                        mEvent.saveResource(nearestBeacon.getProximityUUID(), resource);
+                    }
+                    // Stream the resource
                     try {
                         setBeaconAudioStream(resourceUrl);
                     } catch (IOException e) {
-                        Log.d("BeaconActivity", "PORCO DIO");
+                        Log.d("BeaconActivity", "Can't stream the resource");
                     }
                 }
             }
