@@ -1,10 +1,14 @@
 package se.kth.id2012_project;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.RemoteException;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.graphics.Palette;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,6 +23,7 @@ import com.estimote.sdk.EstimoteSDK;
 import com.estimote.sdk.Region;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,6 +42,9 @@ public class BeaconActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beacon);
+        // Set ActionBar
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         // App ID & App Token can be taken from App section of Estimote Cloud.
         EstimoteSDK.initialize(getApplicationContext(), "id2012-project", "30ff36944829f37eda7fe252493048d2");
         // Optional, debug logging.
@@ -46,7 +54,7 @@ public class BeaconActivity extends ActionBarActivity {
         // Get the event name from EventActivity
         Intent fromEventActivity = getIntent();
         String eventName = fromEventActivity.getStringExtra("event_name");
-        setTitle(eventName);
+        toolbar.setTitle(eventName);
         mEvent = new Event(eventName);
         // Create global configuration and initialize ImageLoader with default config
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
@@ -71,7 +79,15 @@ public class BeaconActivity extends ActionBarActivity {
                     // Set the beaconName
                     ((TextView) findViewById(R.id.beaconName)).setText(resource.getName());
                     // Set the beaconImage
-                    imageLoader.displayImage(resource.getImageUrl(), (ImageView) findViewById(R.id.beaconImage));
+                    // OLD imageLoader.displayImage(resource.getImageUrl(), (ImageView) findViewById(R.id.beaconImage));
+                    imageLoader.loadImage(resource.getImageUrl(), new SimpleImageLoadingListener() {
+                        @Override
+                        public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+                            ((ImageView) findViewById(R.id.beaconImage)).setImageBitmap(loadedImage);
+                            int prominentColor = Palette.generate(loadedImage).getVibrantColor(Color.BLACK);
+                            toolbar.setBackgroundColor(prominentColor);
+                        }
+                    });
                     // Stream the resource
                     try {
                         setBeaconAudioStream(resource.getAudioUrl());
