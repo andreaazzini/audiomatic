@@ -10,11 +10,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.EstimoteSDK;
 import com.estimote.sdk.Region;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import java.io.IOException;
 import java.util.List;
@@ -44,6 +48,10 @@ public class BeaconActivity extends ActionBarActivity {
         String eventName = fromEventActivity.getStringExtra("event_name");
         setTitle(eventName);
         mEvent = new Event(eventName);
+        // Create global configuration and initialize ImageLoader with default config
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
+        final ImageLoader imageLoader = ImageLoader.getInstance();
+        imageLoader.init(config);
 
         beaconManager.setRangingListener(new BeaconManager.RangingListener() {
             @Override
@@ -52,17 +60,23 @@ public class BeaconActivity extends ActionBarActivity {
                     Log.d("EventActivity", Integer.toString(beacons.size()));
                     Beacon nearestBeacon = getNearestBeacon(beacons);
                     // TODO retrieve the correct resource
-                    Button beaconButton = (Button) findViewById(R.id.beaconButton);
-                    beaconButton.setVisibility(View.VISIBLE);
-                    String resourceUrl = "http://a1083.phobos.apple.com/us/r1000/014/Music/v4/4e/44/b7/4e44b7dc-aaa2-c63b-fb38-88e1635b5b29/mzaf_1844128138535731917.plus.aac.p.m4a";
+                    Resource resource = new Resource(
+                            "Happy",
+                            "http://a1083.phobos.apple.com/us/r1000/014/Music/v4/4e/44/b7/4e44b7dc-aaa2-c63b-fb38-88e1635b5b29/mzaf_1844128138535731917.plus.aac.p.m4a",
+                            "http://upload.wikimedia.org/wikipedia/en/2/23/Pharrell_Williams_-_Happy.jpg");
                     // Save the resource for later fast retrieval
-                    Resource resource = new Resource(resourceUrl, null);
                     if (!mEvent.hasResourceOfBeacon(nearestBeacon.getProximityUUID())) {
                         mEvent.saveResource(nearestBeacon.getProximityUUID(), resource);
                     }
+                    // Set the beaconName
+                    ((TextView) findViewById(R.id.beaconName)).setText(resource.getName());
+                    // Set the beaconImage
+                    imageLoader.displayImage(resource.getImageUrl(), (ImageView) findViewById(R.id.beaconImage));
                     // Stream the resource
                     try {
-                        setBeaconAudioStream(resourceUrl);
+                        setBeaconAudioStream(resource.getAudioUrl());
+                        // Set the beaconButton visible
+                        findViewById(R.id.beaconButton).setVisibility(View.VISIBLE);
                     } catch (IOException e) {
                         Log.d("BeaconActivity", "Can't stream the resource");
                     }
