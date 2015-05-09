@@ -42,11 +42,15 @@ public class BeaconActivity extends ActionBarActivity {
     private Toolbar mToolbar;
     private int mToolbarColor;
     private int mStatusBarColor;
+    private TCPClient mTCPClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beacon);
+        // Setup TCP client
+        mTCPClient = new TCPClient();
+        new Thread(mTCPClient).start();
         // Set ActionBar
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         mStatusBarColor = Color.argb(255, 25, 118, 210);
@@ -75,10 +79,12 @@ public class BeaconActivity extends ActionBarActivity {
                     Log.d("EventActivity", Integer.toString(beacons.size()));
                     Beacon nearestBeacon = getNearestBeacon(beacons);
                     // TODO retrieve the correct resource
+                    mTCPClient.send(ESTIMOTE_PROXIMITY_UUID.substring(0, 4));
+                    String resourceName = mTCPClient.receive();
                     Resource resource = new Resource(
-                            "Happy",
+                            resourceName,
                             "http://a1083.phobos.apple.com/us/r1000/014/Music/v4/4e/44/b7/4e44b7dc-aaa2-c63b-fb38-88e1635b5b29/mzaf_1844128138535731917.plus.aac.p.m4a",
-                            "http://medias.photodeck.com/ee971f32-cc40-11e2-8b6f-c94cb199f455/Deep_Forest_xlarge.jpg");
+                            "http://a4.mzstatic.com/us/r30/Music/v4/3a/e9/f1/3ae9f18b-1ec0-d5a7-c452-9af373f52762/886444405560.600x600-75.jpg");
                     // Save the resource for later fast retrieval
                     if (!mEvent.hasResourceOfBeacon(nearestBeacon.getProximityUUID())) {
                         mEvent.saveResource(nearestBeacon.getProximityUUID(), resource);
@@ -158,6 +164,7 @@ public class BeaconActivity extends ActionBarActivity {
             Log.e("Manager Stop Error", "Cannot stop but it does not matter now", e);
         }
         beaconManager.disconnect();
+        mTCPClient.closeConnection();
         super.onDestroy();
     }
 

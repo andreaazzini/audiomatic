@@ -9,10 +9,14 @@ import android.view.View;
 import android.widget.EditText;
 
 public class EventActivity extends ActionBarActivity {
+    private TCPClient mTCPClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event);
+        mTCPClient = new TCPClient();
+        new Thread(mTCPClient).start();
     }
 
 
@@ -41,14 +45,16 @@ public class EventActivity extends ActionBarActivity {
     public void confirmCode(View v) {
         EditText codeText = (EditText) findViewById(R.id.eventNumber);
         String code = codeText.getText().toString();
-        // TODO check the existence of the code
-        // if so, get the beacon information
-        // and go to the BeaconActivity through an Intent
-        Intent confirmIntent = new Intent(this, BeaconActivity.class);
-        // TODO retrieve the real event name
-        confirmIntent.putExtra("event_name", "Happiness Museum");
-        startActivity(confirmIntent);
-        finish();
-        // otherwise, set error
+        mTCPClient.send(code);
+        String response = mTCPClient.receive();
+        if (response.equals("ERROR")) {
+            codeText.setError("The specified code does not exist");
+        } else {
+            mTCPClient.closeConnection();
+            Intent confirmIntent = new Intent(this, BeaconActivity.class);
+            confirmIntent.putExtra("event_name", response);
+            startActivity(confirmIntent);
+            finish();
+        }
     }
 }
