@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
@@ -23,7 +24,8 @@ public class BeaconActivity extends ActionBarActivity {
     private static final Region ALL_ESTIMOTE_BEACONS = new Region("regionId", ESTIMOTE_PROXIMITY_UUID, null, null);
 
     private BeaconManager beaconManager;
-    private MediaPlayer mMediaPlayer = new MediaPlayer();
+    private MediaPlayer mMediaPlayer;
+    private String mStreamingResourceUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +37,7 @@ public class BeaconActivity extends ActionBarActivity {
         EstimoteSDK.enableDebugLogging(true);
 
         beaconManager = new BeaconManager(this);
+        mMediaPlayer = new MediaPlayer();
 
         beaconManager.setRangingListener(new BeaconManager.RangingListener() {
             @Override
@@ -42,6 +45,15 @@ public class BeaconActivity extends ActionBarActivity {
                 if (!beacons.isEmpty()) {
                     Log.d("EventActivity", Integer.toString(beacons.size()));
                     Beacon nearestBeacon = getNearestBeacon(beacons);
+                    // TODO retrieve the correct resource
+                    Button beaconButton = (Button) findViewById(R.id.beaconButton);
+                    beaconButton.setClickable(true);
+                    String resourceUrl = "http://a1083.phobos.apple.com/us/r1000/014/Music/v4/4e/44/b7/4e44b7dc-aaa2-c63b-fb38-88e1635b5b29/mzaf_1844128138535731917.plus.aac.p.m4a";
+                    try {
+                        setBeaconAudioStream(resourceUrl);
+                    } catch (IOException e) {
+                        Log.d("BeaconActivity", "PORCO DIO");
+                    }
                 }
             }
         });
@@ -108,18 +120,24 @@ public class BeaconActivity extends ActionBarActivity {
     }
 
     private void setBeaconAudioStream(String path) throws IOException {
-        mMediaPlayer.setDataSource(path);
-        mMediaPlayer.prepare();
-        mMediaPlayer.start();
+        if (!path.equals(mStreamingResourceUrl)) {
+            // Plays the audio file
+            mMediaPlayer.setDataSource(path);
+            mMediaPlayer.prepare();
+            mMediaPlayer.start();
+            // Sets the new value of the streaming resource
+            mStreamingResourceUrl = path;
+        }
     }
 
     public void handlePlay(View view) {
+        Button beaconButton = (Button) findViewById(R.id.beaconButton);
         if (mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
-            // TODO set button text to Play
+            beaconButton.setText("Play");
         } else {
             mMediaPlayer.start();
-            // TODO set button text to Pause
+            beaconButton.setText("Pause");
         }
     }
 }

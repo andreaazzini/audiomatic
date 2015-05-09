@@ -21,4 +21,14 @@
         android:id="@+id/beaconImage"
         android:layout_below="@+id/beaconName"
         android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pause"
+        android:clickable="false"
+        android:id="@+id/beaconButton"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:onClick="handlePlay"/>
 </RelativeLayout>

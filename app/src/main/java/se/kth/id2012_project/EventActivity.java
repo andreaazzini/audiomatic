@@ -1,5 +1,6 @@
 package se.kth.id2012_project;
 
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -43,11 +44,9 @@ public class EventActivity extends ActionBarActivity {
         // TODO check the existence of the code
         // if so, get the beacon information
         // and go to the BeaconActivity through an Intent
+        Intent confirmIntent = new Intent(this, BeaconActivity.class);
+        startActivity(confirmIntent);
+        finish();
         // otherwise, set error
-    }
-
-    private int getBeaconNameFromServer(String path) {
-        // TODO retrieve the beacon id in the server's hashmap
-        return -1;
     }
 }
