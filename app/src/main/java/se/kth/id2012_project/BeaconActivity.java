@@ -1,5 +1,7 @@
 package se.kth.id2012_project;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -37,14 +39,19 @@ public class BeaconActivity extends ActionBarActivity {
     private MediaPlayer mMediaPlayer;
     private String mStreamingResourceUrl;
     private Event mEvent;
+    private Toolbar mToolbar;
+    private int mToolbarColor;
+    private int mStatusBarColor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beacon);
         // Set ActionBar
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        mStatusBarColor = Color.argb(255, 25, 118, 210);
+        mToolbarColor = Color.argb(255, 33, 150, 243);
+        getWindow().setStatusBarColor(mStatusBarColor);
         // App ID & App Token can be taken from App section of Estimote Cloud.
         EstimoteSDK.initialize(getApplicationContext(), "id2012-project", "30ff36944829f37eda7fe252493048d2");
         // Optional, debug logging.
@@ -54,7 +61,7 @@ public class BeaconActivity extends ActionBarActivity {
         // Get the event name from EventActivity
         Intent fromEventActivity = getIntent();
         String eventName = fromEventActivity.getStringExtra("event_name");
-        toolbar.setTitle(eventName);
+        mToolbar.setTitle(eventName);
         mEvent = new Event(eventName);
         // Create global configuration and initialize ImageLoader with default config
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
@@ -71,7 +78,7 @@ public class BeaconActivity extends ActionBarActivity {
                     Resource resource = new Resource(
                             "Happy",
                             "http://a1083.phobos.apple.com/us/r1000/014/Music/v4/4e/44/b7/4e44b7dc-aaa2-c63b-fb38-88e1635b5b29/mzaf_1844128138535731917.plus.aac.p.m4a",
-                            "http://upload.wikimedia.org/wikipedia/en/2/23/Pharrell_Williams_-_Happy.jpg");
+                            "http://medias.photodeck.com/ee971f32-cc40-11e2-8b6f-c94cb199f455/Deep_Forest_xlarge.jpg");
                     // Save the resource for later fast retrieval
                     if (!mEvent.hasResourceOfBeacon(nearestBeacon.getProximityUUID())) {
                         mEvent.saveResource(nearestBeacon.getProximityUUID(), resource);
@@ -84,8 +91,35 @@ public class BeaconActivity extends ActionBarActivity {
                         @Override
                         public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
                             ((ImageView) findViewById(R.id.beaconImage)).setImageBitmap(loadedImage);
-                            int prominentColor = Palette.generate(loadedImage).getVibrantColor(Color.BLACK);
-                            toolbar.setBackgroundColor(prominentColor);
+                            final int prominentColor = Palette.generate(loadedImage).getVibrantColor(mToolbarColor);
+                            // Darken prominent color
+                            float[] hsv = new float[3];
+                            Color.colorToHSV(prominentColor, hsv);
+                            hsv[2] *= 0.8f; // value component
+                            final int prominentDarkColor = Color.HSVToColor(hsv);
+                            // Let the animators work
+                            ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), mToolbarColor, prominentColor);
+                            ValueAnimator colorStatusAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), mStatusBarColor, prominentDarkColor);
+                            colorAnimation.setDuration(1000);
+                            colorStatusAnimation.setDuration(1000);
+                            colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                                @Override
+                                public void onAnimationUpdate(ValueAnimator animator) {
+                                    int transitionColor = (int) animator.getAnimatedValue();
+                                    mToolbar.setBackgroundColor(transitionColor);
+                                    mToolbarColor = transitionColor;
+                                }
+                            });
+                            colorStatusAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                                @Override
+                                public void onAnimationUpdate(ValueAnimator animator) {
+                                    int transitionColor = (int) animator.getAnimatedValue();
+                                    getWindow().setStatusBarColor(transitionColor);
+                                    mStatusBarColor = transitionColor;
+                                }
+                            });
+                            colorAnimation.start();
+                            colorStatusAnimation.start();
                         }
                     });
                     // Stream the resource
