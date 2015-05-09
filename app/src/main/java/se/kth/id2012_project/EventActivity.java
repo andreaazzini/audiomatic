@@ -50,7 +50,6 @@ public class EventActivity extends ActionBarActivity {
         if (response.equals("ERROR")) {
             codeText.setError("The specified code does not exist");
         } else {
-            mTCPClient.closeConnection();
             Intent confirmIntent = new Intent(this, BeaconActivity.class);
             confirmIntent.putExtra("event_name", response);
             startActivity(confirmIntent);

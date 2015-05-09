@@ -48,9 +48,6 @@ public class BeaconActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beacon);
-        // Setup TCP client
-        mTCPClient = new TCPClient();
-        new Thread(mTCPClient).start();
         // Set ActionBar
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         mStatusBarColor = Color.argb(255, 25, 118, 210);
@@ -65,7 +62,11 @@ public class BeaconActivity extends ActionBarActivity {
         // Get the event name from EventActivity
         Intent fromEventActivity = getIntent();
         String eventName = fromEventActivity.getStringExtra("event_name");
+        // Setup TCP client
+        mTCPClient = new TCPClient();
+        new Thread(mTCPClient).start();
         mToolbar.setTitle(eventName);
+
         mEvent = new Event(eventName);
         // Create global configuration and initialize ImageLoader with default config
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
@@ -81,6 +82,7 @@ public class BeaconActivity extends ActionBarActivity {
                     // TODO retrieve the correct resource
                     mTCPClient.send(ESTIMOTE_PROXIMITY_UUID.substring(0, 4));
                     String resourceName = mTCPClient.receive();
+                    Log.d("BeaconActivity", resourceName);
                     Resource resource = new Resource(
                             resourceName,
                             "http://a1083.phobos.apple.com/us/r1000/014/Music/v4/4e/44/b7/4e44b7dc-aaa2-c63b-fb38-88e1635b5b29/mzaf_1844128138535731917.plus.aac.p.m4a",

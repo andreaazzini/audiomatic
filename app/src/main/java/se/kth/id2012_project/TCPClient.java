@@ -12,7 +12,6 @@ import java.util.concurrent.ExecutionException;
 public class TCPClient implements Runnable {
     private static final String SERVER_IP = "130.229.161.101";
     private static final int PORT = 4444;
-    private static final int BYTE_LENGTH = 4096;
 
     private Socket socket;
     private BufferedInputStream inputStream;
