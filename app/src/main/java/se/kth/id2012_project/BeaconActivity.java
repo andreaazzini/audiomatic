@@ -14,7 +14,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.azzarcher.colormanager.ColorManager;
 import com.estimote.sdk.Beacon;
@@ -84,28 +83,27 @@ public class BeaconActivity extends ActionBarActivity {
         final ImageLoader imageLoader = ImageLoader.getInstance();
         imageLoader.init(config);
 
+        // Sets the default Image View
+        //ImageView imageView = (ImageView) findViewById(R.id.beaconImage);
+        //imageView.setImageDrawable(getResources().getDrawable(R.drawable.nosignal));
+
         beaconManager.setRangingListener(new BeaconManager.RangingListener() {
             @Override
             public void onBeaconsDiscovered(Region region, List<Beacon> beacons) {
                 if (!beacons.isEmpty()) {
-                    Log.d("EventActivity", Integer.toString(beacons.size()));
                     Beacon nearestBeacon = getNearestBeacon(beacons);
-                    // TODO retrieve the correct resource
+
                     mTCPClient.send(ESTIMOTE_PROXIMITY_UUID.substring(0, 4));
                     String resourceName = mTCPClient.receive();
-                    Log.d("BeaconActivity", resourceName);
                     Resource resource = new Resource(
                             resourceName,
                             "http://" + SERVER_IP + ":" + SERVER_PORT + "/" + WEB_SERVER_NAME + "/" + eventName + "/" + resourceName + "/" + "audio.mp3",
                             "http://" + SERVER_IP + ":" + SERVER_PORT + "/" + WEB_SERVER_NAME + "/" + eventName + "/" + resourceName + "/" + "image.jpg");
-                            // Save the resource for later fast retrieval
+                    // Save the resource for later fast retrieval
                     if (!mEvent.hasResourceOfBeacon(nearestBeacon.getProximityUUID())) {
                         mEvent.saveResource(nearestBeacon.getProximityUUID(), resource);
                     }
-                    // Set the beaconName
-                    ((TextView) findViewById(R.id.beaconName)).setText(resource.getName());
                     // Set the beaconImage
-                    // OLD imageLoader.displayImage(resource.getImageUrl(), (ImageView) findViewById(R.id.beaconImage));
                     imageLoader.loadImage(resource.getImageUrl(), new SimpleImageLoadingListener() {
                         @Override
                         public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {

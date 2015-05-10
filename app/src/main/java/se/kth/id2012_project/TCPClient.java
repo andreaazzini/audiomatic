@@ -10,7 +10,7 @@ import java.net.Socket;
 import java.util.concurrent.ExecutionException;
 
 public class TCPClient implements Runnable {
-    private static final int PORT = 4444;
+    private static final int PORT = 5555;
 
     private Socket socket;
     private BufferedInputStream inputStream;

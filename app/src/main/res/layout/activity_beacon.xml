@@ -14,11 +14,4 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="@dimen/abc_action_bar_default_height_material"
         android:contentDescription="beacon image" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/beaconName"
-        android:textStyle="bold"
-        android:layout_below="@+id/beaconImage"/>
 </RelativeLayout>
