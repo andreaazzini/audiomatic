@@ -9,13 +9,15 @@ import android.view.View;
 import android.widget.EditText;
 
 public class EventActivity extends ActionBarActivity {
+    private static final String SERVER_IP = "130.229.161.101";
+
     private TCPClient mTCPClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event);
-        mTCPClient = new TCPClient();
+        mTCPClient = new TCPClient(SERVER_IP);
         new Thread(mTCPClient).start();
     }
 

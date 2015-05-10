@@ -8,11 +8,12 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:scaleType="fitCenter"
+        android:scaleType="fitXY"
         android:adjustViewBounds="true"
         android:id="@+id/beaconImage"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="@dimen/abc_action_bar_default_height_material"/>
+        android:layout_marginTop="@dimen/abc_action_bar_default_height_material"
+        android:contentDescription="beacon image" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -20,14 +21,4 @@
         android:id="@+id/beaconName"
         android:textStyle="bold"
         android:layout_below="@+id/beaconImage"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Pause"
-        android:visibility="gone"
-        android:id="@+id/beaconButton"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:onClick="handlePlay"/>
 </RelativeLayout>

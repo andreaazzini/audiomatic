@@ -13,7 +13,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -32,9 +31,13 @@ import java.util.List;
 
 
 public class BeaconActivity extends ActionBarActivity {
+    private static final String SERVER_IP = "130.229.161.101";
+    private static final String SERVER_PORT = "8080";
+    private static final String WEB_SERVER_NAME = "UbiquitousWebServer";
     private static final String ESTIMOTE_PROXIMITY_UUID = "B9407F30-F5F8-466E-AFF9-25556B57FE6D";
     private static final Region ALL_ESTIMOTE_BEACONS = new Region("regionId", ESTIMOTE_PROXIMITY_UUID, null, null);
 
+    private Menu mMenu;
     private BeaconManager beaconManager;
     private MediaPlayer mMediaPlayer;
     private String mStreamingResourceUrl;
@@ -64,14 +67,17 @@ public class BeaconActivity extends ActionBarActivity {
         mMediaPlayer = new MediaPlayer();
 
         // Setup TCP client
-        mTCPClient = new TCPClient();
+        mTCPClient = new TCPClient(SERVER_IP);
         new Thread(mTCPClient).start();
 
         // Get the event name from EventActivity
         Intent fromEventActivity = getIntent();
-        String eventName = fromEventActivity.getStringExtra("event_name");
+        final String eventName = fromEventActivity.getStringExtra("event_name");
         toolbar.setTitle(eventName);
         mEvent = new Event(eventName);
+
+        // Sets the action bar
+        setSupportActionBar(toolbar);
 
         // Create global configuration and initialize ImageLoader with default config
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
@@ -90,9 +96,9 @@ public class BeaconActivity extends ActionBarActivity {
                     Log.d("BeaconActivity", resourceName);
                     Resource resource = new Resource(
                             resourceName,
-                            "http://a1083.phobos.apple.com/us/r1000/014/Music/v4/4e/44/b7/4e44b7dc-aaa2-c63b-fb38-88e1635b5b29/mzaf_1844128138535731917.plus.aac.p.m4a",
-                            "http://a4.mzstatic.com/us/r30/Music/v4/3a/e9/f1/3ae9f18b-1ec0-d5a7-c452-9af373f52762/886444405560.600x600-75.jpg");
-                    // Save the resource for later fast retrieval
+                            "http://" + SERVER_IP + ":" + SERVER_PORT + "/" + WEB_SERVER_NAME + "/" + eventName + "/" + resourceName + "/" + "audio.mp3",
+                            "http://" + SERVER_IP + ":" + SERVER_PORT + "/" + WEB_SERVER_NAME + "/" + eventName + "/" + resourceName + "/" + "image.jpg");
+                            // Save the resource for later fast retrieval
                     if (!mEvent.hasResourceOfBeacon(nearestBeacon.getProximityUUID())) {
                         mEvent.saveResource(nearestBeacon.getProximityUUID(), resource);
                     }
@@ -120,8 +126,6 @@ public class BeaconActivity extends ActionBarActivity {
                     // Stream the resource
                     try {
                         setBeaconAudioStream(resource.getAudioUrl());
-                        // Set the beaconButton visible
-                        findViewById(R.id.beaconButton).setVisibility(View.VISIBLE);
                     } catch (IOException e) {
                         Log.d("BeaconActivity", "Can't stream the resource");
                     }
@@ -161,6 +165,7 @@ public class BeaconActivity extends ActionBarActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_beacon, menu);
+        mMenu = menu;
         return true;
     }
 
@@ -172,7 +177,16 @@ public class BeaconActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_play) {
+            if (mMediaPlayer.isPlaying()) {
+                mMediaPlayer.pause();
+                item.setTitle("Play");
+                item.setIcon(R.drawable.ic_play_arrow_black_48dp);
+            } else {
+                mMediaPlayer.start();
+                item.setTitle("Pause");
+                item.setIcon(R.drawable.ic_pause_black_48dp);
+            }
             return true;
         }
 
@@ -197,19 +211,13 @@ public class BeaconActivity extends ActionBarActivity {
             mMediaPlayer.setDataSource(path);
             mMediaPlayer.prepare();
             mMediaPlayer.start();
+            // Changes the audio icon in the toolbar
+            MenuItem audioItem = mMenu.getItem(0);
+            audioItem.setVisible(true);
+            audioItem.setTitle("Pause");
+            audioItem.setIcon(R.drawable.ic_pause_black_48dp);
             // Sets the new value of the streaming resource
             mStreamingResourceUrl = path;
-        }
-    }
-
-    public void handlePlay(View view) {
-        Button beaconButton = (Button) findViewById(R.id.beaconButton);
-        if (mMediaPlayer.isPlaying()) {
-            mMediaPlayer.pause();
-            beaconButton.setText("Play");
-        } else {
-            mMediaPlayer.start();
-            beaconButton.setText("Pause");
         }
     }
 }

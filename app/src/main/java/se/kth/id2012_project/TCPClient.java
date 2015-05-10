@@ -10,18 +10,22 @@ import java.net.Socket;
 import java.util.concurrent.ExecutionException;
 
 public class TCPClient implements Runnable {
-    private static final String SERVER_IP = "130.229.161.101";
     private static final int PORT = 4444;
 
     private Socket socket;
     private BufferedInputStream inputStream;
     private BufferedOutputStream outputStream;
+    private String serverIp;
+
+    public TCPClient(String serverIp) {
+        this.serverIp = serverIp;
+    }
 
 
     @Override
     public void run() {
         try {
-            InetAddress serverAddr = InetAddress.getByName(SERVER_IP);
+            InetAddress serverAddr = InetAddress.getByName(serverIp);
             socket = new Socket(serverAddr, PORT);
 
             inputStream = new BufferedInputStream(socket.getInputStream());

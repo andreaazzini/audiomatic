@@ -2,6 +2,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="se.kth.id2012_project.BeaconActivity">
-    <item android:id="@+id/action_settings" android:title="@string/action_settings"
-        android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_play" android:title="Play"
+        android:orderInCategory="100" app:showAsAction="always"
+        android:icon="@drawable/ic_play_arrow_black_48dp"
+        android:visible="false"/>
 </menu>
