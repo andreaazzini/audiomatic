@@ -1,7 +1,5 @@
 package se.kth.id2012_project;
 
-import android.animation.ArgbEvaluator;
-import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -19,6 +17,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.azzarcher.colormanager.ColorManager;
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.EstimoteSDK;
@@ -31,6 +30,7 @@ import java.io.IOException;
 import java.util.List;
 
 
+
 public class BeaconActivity extends ActionBarActivity {
     private static final String ESTIMOTE_PROXIMITY_UUID = "B9407F30-F5F8-466E-AFF9-25556B57FE6D";
     private static final Region ALL_ESTIMOTE_BEACONS = new Region("regionId", ESTIMOTE_PROXIMITY_UUID, null, null);
@@ -39,35 +39,40 @@ public class BeaconActivity extends ActionBarActivity {
     private MediaPlayer mMediaPlayer;
     private String mStreamingResourceUrl;
     private Event mEvent;
-    private Toolbar mToolbar;
-    private int mToolbarColor;
-    private int mStatusBarColor;
     private TCPClient mTCPClient;
+    private ColorManager mColorManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beacon);
-        // Set ActionBar
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        mStatusBarColor = Color.argb(255, 25, 118, 210);
-        mToolbarColor = Color.argb(255, 33, 150, 243);
-        getWindow().setStatusBarColor(mStatusBarColor);
+
+        // Set ColorManager
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        int toolbarColor = Color.argb(255, 33, 150, 243);
+        int statusBarColor = ColorManager.generateDarkColorFromPrimary(toolbarColor);
+        mColorManager = new ColorManager()
+                .setToolbar(toolbar)
+                .setToolbarColor(toolbarColor)
+                .setStatusBarColor(getWindow(), statusBarColor);
+
         // App ID & App Token can be taken from App section of Estimote Cloud.
         EstimoteSDK.initialize(getApplicationContext(), "id2012-project", "30ff36944829f37eda7fe252493048d2");
         // Optional, debug logging.
         EstimoteSDK.enableDebugLogging(true);
         beaconManager = new BeaconManager(this);
         mMediaPlayer = new MediaPlayer();
-        // Get the event name from EventActivity
-        Intent fromEventActivity = getIntent();
-        String eventName = fromEventActivity.getStringExtra("event_name");
+
         // Setup TCP client
         mTCPClient = new TCPClient();
         new Thread(mTCPClient).start();
-        mToolbar.setTitle(eventName);
 
+        // Get the event name from EventActivity
+        Intent fromEventActivity = getIntent();
+        String eventName = fromEventActivity.getStringExtra("event_name");
+        toolbar.setTitle(eventName);
         mEvent = new Event(eventName);
+
         // Create global configuration and initialize ImageLoader with default config
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
         final ImageLoader imageLoader = ImageLoader.getInstance();
@@ -99,35 +104,17 @@ public class BeaconActivity extends ActionBarActivity {
                         @Override
                         public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
                             ((ImageView) findViewById(R.id.beaconImage)).setImageBitmap(loadedImage);
-                            final int prominentColor = Palette.generate(loadedImage).getVibrantColor(mToolbarColor);
-                            // Darken prominent color
-                            float[] hsv = new float[3];
-                            Color.colorToHSV(prominentColor, hsv);
-                            hsv[2] *= 0.8f; // value component
-                            final int prominentDarkColor = Color.HSVToColor(hsv);
+                            int prominentColor = Palette.generate(loadedImage).getVibrantColor(Color.BLUE);
+                            int prominentDarkColor = ColorManager.generateDarkColorFromPrimary(prominentColor);
                             // Let the animators work
-                            ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), mToolbarColor, prominentColor);
-                            ValueAnimator colorStatusAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), mStatusBarColor, prominentDarkColor);
-                            colorAnimation.setDuration(1000);
-                            colorStatusAnimation.setDuration(1000);
-                            colorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                                @Override
-                                public void onAnimationUpdate(ValueAnimator animator) {
-                                    int transitionColor = (int) animator.getAnimatedValue();
-                                    mToolbar.setBackgroundColor(transitionColor);
-                                    mToolbarColor = transitionColor;
-                                }
-                            });
-                            colorStatusAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                                @Override
-                                public void onAnimationUpdate(ValueAnimator animator) {
-                                    int transitionColor = (int) animator.getAnimatedValue();
-                                    getWindow().setStatusBarColor(transitionColor);
-                                    mStatusBarColor = transitionColor;
-                                }
-                            });
-                            colorAnimation.start();
-                            colorStatusAnimation.start();
+                            try {
+                                mColorManager.animateToolbar(prominentColor);
+                                mColorManager.animateStatusBar(prominentDarkColor);
+                            } catch (ColorManager.NoToolbarColorException e) {
+                                e.printStackTrace();
+                            } catch (ColorManager.NoStatusBarColorException e) {
+                                e.printStackTrace();
+                            }
                         }
                     });
                     // Stream the resource
