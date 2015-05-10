@@ -43,11 +43,14 @@ public class BeaconActivity extends ActionBarActivity {
     private Event mEvent;
     private TCPClient mTCPClient;
     private ColorManager mColorManager;
+    private boolean mInformationReceived;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beacon);
+
+        mInformationReceived = false;
 
         // Set ColorManager
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -84,17 +87,18 @@ public class BeaconActivity extends ActionBarActivity {
         imageLoader.init(config);
 
         // Sets the default Image View
-        //ImageView imageView = (ImageView) findViewById(R.id.beaconImage);
-        //imageView.setImageDrawable(getResources().getDrawable(R.drawable.nosignal));
+        ImageView imageView = (ImageView) findViewById(R.id.beaconImage);
+        imageView.setImageDrawable(getResources().getDrawable(R.drawable.nosignal));
 
         beaconManager.setRangingListener(new BeaconManager.RangingListener() {
             @Override
             public void onBeaconsDiscovered(Region region, List<Beacon> beacons) {
-                if (!beacons.isEmpty()) {
+                if (!beacons.isEmpty() && !mInformationReceived) {
                     Beacon nearestBeacon = getNearestBeacon(beacons);
-
                     mTCPClient.send(ESTIMOTE_PROXIMITY_UUID.substring(0, 4));
                     String resourceName = mTCPClient.receive();
+                    mInformationReceived = true;
+
                     Resource resource = new Resource(
                             resourceName,
                             "http://" + SERVER_IP + ":" + SERVER_PORT + "/" + WEB_SERVER_NAME + "/" + eventName + "/" + resourceName + "/" + "audio.mp3",
@@ -198,6 +202,8 @@ public class BeaconActivity extends ActionBarActivity {
         for (Beacon beacon : beacons) {
             if (beacon.getRssi() > nearestBeacon.getRssi()) {
                 nearestBeacon = beacon;
+                // mInformation now becomes false
+                mInformationReceived = false;
             }
         }
         return nearestBeacon;
